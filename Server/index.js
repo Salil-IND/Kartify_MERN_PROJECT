@@ -2,15 +2,14 @@ import express from 'express';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
-import {customerRoutes} from '../routes/customer.routes.js';
+import customerRoutes from './routes/customer.routes.js';
 
 
 //Setup 
 dotenv.config(); 
-app = express();
-mongoose.connect(dbUrl, ()=>{
-    console.log('DB connected');
-});
+const app = express(); 
+
+mongoose.connect(process.env.dbUrl).then(()=>console.log("DB Connected")).catch((error)=>console.error(error))
 
 app.use(express.json());
 app.use(cookieParser());

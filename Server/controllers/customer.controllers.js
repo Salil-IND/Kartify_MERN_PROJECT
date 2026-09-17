@@ -2,6 +2,7 @@ import {Customer} from '../models/customer.models.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import {genToken} from '../utils/generateToken.js';
+import customerRoutes from '../routes/customer.routes.js';
 
 
 const cookieOptions = {httpOnly:true,
@@ -53,4 +54,55 @@ export const registerCustomer = (req, res) => {
     })
 
 
+}
+
+
+
+
+export const getUser = (req, res)=> {
+  if (!req.customerData){
+    return res.status(404).json({
+      message:"User Not Found"
+    })
+  }
+  
+  return res.status(200).json({
+      message:"User Info was Found"
+  })
+
+}
+
+export const loginUser = (req, res)=>{
+    const {email, password} = req.body;
+
+    if (!email || !password){
+        return res.status(400).json({
+            message:"All fields must be filled!"
+        })
+    }
+
+    const customer = Customer.findOne({email})
+
+    if(!customer){
+        return res.status(404).json({
+            message: "User not found. Please register first"
+        })
+    }
+
+    const passwordCheck = bcrypt.compare(password, customer.password) 
+
+    if (!passwordCheck){
+        return res.status(400).json({
+            message: "Password is incorrect!"
+        })
+    }
+
+    return res.status(200).json({
+        message: 'Welcome Back!'
+    })
+
+}
+
+export const logOutUser = (req, res) =>{
+    
 }
