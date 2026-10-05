@@ -8,46 +8,46 @@ import customerRoutes from '../routes/customer.routes.js';
 const cookieOptions = {httpOnly:true,
 }
 
-export const registerCustomer = (req, res) => {
+export const registerCustomer = async (req, res) => {
     const {fullName, email, password, phone} = req.body;
 
     //Input Validation 
     if (!fullName || !email || !phone || !password){
-        res.status(400).json({
+        return res.status(400).json({
             error: 'All fields must be filled',
         })
     }
 
     if (password.length < 6){
-        res.status(400).json({
+        return res.status(400).json({
             message: "Password is too short",
         })
     }
 
-    const emailExists = Customer.findOne({email});
+    const emailExists = await Customer.findOne({email});
 
     if (emailExists){
-        res.status(400).json({
+        return res.status(400).json({
             message:'User already exists with this email'
         })
     } 
 
     //Hashing 
-    const salt = bcrypt.genSalt()
-    const hashedPassword = bcrypt.hash(password, salt, 14);
+    const salt = await bcrypt.genSalt(14);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     //Customer Creation
     
-    const newCustomer = Customer.create({
+    const newCustomer = await Customer.create({
         fullName: fullName,
         email:email,
         password:hashedPassword,
-        phone:phone,
+        contactNo: phone,
     })
 
-    const token = genToken(newCustomer._id);
+    // const token = genToken(newCustomer._id);
 
-    res.cookie('token', token, cookieOptions);
+    // res.cookie('token', token, cookieOptions);
 
     res.status(201).json({
         message: "Registered Successfully",
@@ -55,7 +55,6 @@ export const registerCustomer = (req, res) => {
 
 
 }
-
 
 
 
@@ -67,12 +66,13 @@ export const getUser = (req, res)=> {
   }
   
   return res.status(200).json({
-      message:"User Info was Found"
+      message:"User Info was Found",
+      customerData: req.customerData
   })
 
 }
 
-export const loginUser = (req, res)=>{
+export const loginUser = async (req, res)=>{
     const {email, password} = req.body;
 
     if (!email || !password){
@@ -81,7 +81,7 @@ export const loginUser = (req, res)=>{
         })
     }
 
-    const customer = Customer.findOne({email})
+    const customer = await Customer.findOne({email})
 
     if(!customer){
         return res.status(404).json({
@@ -89,7 +89,7 @@ export const loginUser = (req, res)=>{
         })
     }
 
-    const passwordCheck = bcrypt.compare(password, customer.password) 
+    const passwordCheck = await bcrypt.compare(password, customer.password)
 
     if (!passwordCheck){
         return res.status(400).json({
@@ -97,12 +97,28 @@ export const loginUser = (req, res)=>{
         })
     }
 
+    const token = genToken(customer._id);
+
+    res.cookie('token', token, cookieOptions);
+
     return res.status(200).json({
-        message: 'Welcome Back!'
+        message: 'Welcome Back!',
+        customerData:customer,
     })
 
 }
 
+
 export const logOutUser = (req, res) =>{
-    
+    const token = req.cookies.token
+
+    if (token){
+        res.clearCookie("token", cookieOptions)
+    }
+
+    return res.status(200).json({
+        message:'Logged Out Successfully'
+    })
 }
+
+

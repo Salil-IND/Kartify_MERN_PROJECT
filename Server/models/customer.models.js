@@ -18,7 +18,11 @@ const CustomerSchema = mongoose.Schema({
         required: true,
     },
     
-    cart:[{}],
+    wishlist:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:"product"
+    }],
+
 }, {timestamps:true});
 
 

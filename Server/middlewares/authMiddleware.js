@@ -3,7 +3,7 @@ import {Customer} from '../models/customer.models.js'
 
 
 
-export const isAuthenticated = (req, res)=>{
+export const isAuthenticated = async (req, res, next)=>{
   const token = req.cookies.token;
 
   if (!token){
@@ -12,12 +12,14 @@ export const isAuthenticated = (req, res)=>{
     })
   }
 
-  const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-  const customer = Customer.findById(decoded.UserId)
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  
+
+  const customer = await Customer.findById(decoded.userId)
 
   if (!customer){
-    return res.staus(401).json({
+    return res.status(401).json({
       message:"User Not Found"
     })
   }
