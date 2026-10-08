@@ -2,28 +2,41 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios';
 import Navbar from '../components/Navbar';
-import ProductCard from '../components/ProductCard';
+import WishlistCard from '../components/WishlistCard';
 
-export default function WishlistPage() {
+export default function Wishlist() {
   const [wishlistData, setWishlistData] = useState({ success: false, count: 0, products: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchWishlist() {
+  async function fetchWishlist() {
       setLoading(true);
+      setError(null); // clear any previous error on every attempt
       try {
         const response = await axiosInstance.get('/wishlist');
         if (response.data) {
           setWishlistData(response.data);
         }
-      } catch (error) {
-        console.log(error);
+      } catch (err) {
+        setError('Could not load your wishlist. Please try again.');
+        console.log(err);
       } finally {
         setLoading(false);
       }
-    }
+  }
+
+  useEffect(() => {
+    
     fetchWishlist();
   }, []);
+
+  function handleRemove(_id) {
+    setWishlistData((prev) => ({
+      ...prev,
+      count: prev.count - 1,
+      products: prev.products.filter((p) => p._id !== _id),
+    }));
+  }
 
   return (
     <div className="min-h-screen bg-[#f6f1e7] font-serif text-[#2b2118]">
@@ -38,7 +51,7 @@ export default function WishlistPage() {
           <span className="text-[10px] text-[#b08d57]">❦</span>
           <span className="h-px w-10 bg-[#c9bda6]" />
         </div>
-        {!loading && wishlistData.count > 0 && (
+        {!loading && !error && wishlistData.count > 0 && (
           <p className="mt-4 text-sm italic text-[#8a7c66]">
             {wishlistData.count} {wishlistData.count === 1 ? 'piece' : 'pieces'} kept aside.
           </p>
@@ -62,6 +75,22 @@ export default function WishlistPage() {
               </div>
             ))}
           </div>
+        ) : error ? (
+          /* ── Error + Retry ── */
+          <div className="flex flex-col items-center py-20 text-center">
+            <span className="text-3xl text-[#c9bda6]">✕</span>
+            <h3 className="mt-6 text-2xl">Something went wrong</h3>
+            <p className="mt-3 max-w-sm text-sm italic text-[#8a7c66]">
+              {error}
+            </p>
+            <button
+              type="button"
+              onClick={fetchWishlist}
+              className="mt-8 border border-[#2b2118] px-8 py-3 text-xs uppercase tracking-[0.25em] text-[#2b2118] transition hover:bg-[#2b2118] hover:text-[#f6f1e7]"
+            >
+              ↻ Try Again
+            </button>
+          </div>
         ) : wishlistData.products.length === 0 ? (
           /* ── Empty wishlist ── */
           <div className="flex flex-col items-center py-20 text-center">
@@ -82,10 +111,10 @@ export default function WishlistPage() {
           /* ── Wishlist items ── */
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {wishlistData.products.map((p) => (
-              <ProductCard
+              <WishlistCard
                 key={p._id}
-                id={p._id}
-                {...p}
+                p={p}
+                onRemove={handleRemove}
               />
             ))}
           </div>

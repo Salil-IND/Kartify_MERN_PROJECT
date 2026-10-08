@@ -12,6 +12,7 @@ import ProtectedRoutes from './components/ProtectedRoutes';
 import PublicRoutes from './components/PublicRoutes';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetails from './pages/ProductDetails';
+import Wishlist from './pages/Wishlist';
 
 
 
@@ -21,7 +22,8 @@ function App() {
         <AuthProvider>
         <BrowserRouter>
           <Routes>
-            
+
+
               <Route path="/" element={<Navigate to="/home" replace />} />
               <Route path="/home" element={<ProtectedRoutes><Home /></ProtectedRoutes>} />
               <Route path="/login" element={<PublicRoutes><Login /></PublicRoutes>} />
@@ -29,6 +31,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/products" element={<ProtectedRoutes><ProductsPage/></ProtectedRoutes>}/>
               <Route path="/products/:id" element={<ProtectedRoutes><ProductDetails/></ProtectedRoutes>}/>
+              <Route path="/wishlist" element={<Wishlist />} />
               
           </Routes>
         </BrowserRouter>

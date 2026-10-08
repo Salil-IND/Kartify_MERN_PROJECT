@@ -28,6 +28,8 @@ export default function Navbar({ cartCount = 0 }) {
             <Link to="/products" className="transition hover:text-[#7a4a2b]">Products</Link>
           </nav>
 
+          <Link to="/wishlist" className="transition hover:text-[#7a4a2b]">Wishlist</Link>
+
           <Link to="/" className="text-lg tracking-[0.25em] text-[#2b2118]">
             ASHFORD <span className="text-[#b08d57]">&amp;</span> SONS
           </Link>

@@ -22,7 +22,7 @@ export default function ProductsPage() {
   const [productsData, setProductsData] = useState([]);
   const [categoryParam, setCategoryParam] = useState("");
   const [loading, setLoading] = useState(true);
-
+  const [wishlistIds, setWishlistIds] = useState([]);
 
   function handleSearch(e){
     setSearchParam(e.target.value);
@@ -55,6 +55,17 @@ export default function ProductsPage() {
     }
     setLoading(false);
   }
+
+  useEffect(()=>{
+    async function fetchWishlist(){
+      const response = await axiosInstance.get("/wishlist");
+
+      const ids = response.data.products.map(p=>p._id)
+
+      setWishlistIds(ids);
+    }
+    fetchWishlist();
+  }, []);
 
   useEffect(()=>{fetchData()}, [searchParam, categoryParam]);
 
@@ -130,12 +141,14 @@ export default function ProductsPage() {
             {productsData.map((p) => (
               <ProductCard
                 key={p.name}
+                _id={p._id}
                 name={p.name}
                 description={p.description}
                 price={p.price}
                 category={p.category}
                 image={p.image}
                 stock={p.stock}
+                initialWishlisted={wishlistIds.includes(p._id)}
               />
             ))}
           </div>

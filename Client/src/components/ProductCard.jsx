@@ -2,14 +2,50 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { axiosInstance } from '../axiosCalls/axios';
 
-export default function ProductCard({ _id, name, description, price, category, image, stock }) {
+export default function ProductCard({ _id, name, description, price, category, image, stock, initialWishlisted }) {
   const navigate = useNavigate();
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  
+  const [isWishlisted, setIsWishlisted] = useState(initialWishlisted);
+  const [cartQty, setCartQty] = useState(0); // 0 = not in cart
 
-  useEffect(()=>{
-  })
+  const handleToggleWishlist = async () => {
+    const nextWishlistState = !isWishlisted;
+    setIsWishlisted(nextWishlistState); // Optimistic UI update
 
+    try {
+      if (nextWishlistState) {
+        await axiosInstance.post(`/wishlist/${_id}`);
+      } else {
+        await axiosInstance.delete(`/wishlist/${_id}`);
+      }
+    } catch (error) {
+      // Revert state if request fails
+      setIsWishlisted(!nextWishlistState);
+      console.error(error);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      // Replace with your cart endpoint, e.g.:
+      // await axiosInstance.post('/cart', { productId: _id, quantity: 1 });
+      setCartQty(1);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleQuantity = async (change) => {
+    const next = cartQty + change;
+    // Clamp: never below 1, never above available stock
+    if (next < 1 || (stock !== undefined && next > stock)) return;
+    try {
+      // Replace with your update endpoint, e.g.:
+      // await axiosInstance.patch(`/cart/${_id}`, { quantity: next });
+      setCartQty(next);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const shortDescription = description
     ? description.split(' ').slice(0, 9).join(' ') + (description.split(' ').length > 9 ? '…' : '')
@@ -66,7 +102,7 @@ export default function ProductCard({ _id, name, description, price, category, i
         {/* Wishlist toggle */}
         <button
           type="button"
-          onClick={() => setIsWishlisted(!isWishlisted)}
+          onClick={handleToggleWishlist}
           className={`mt-4 w-full border py-2.5 text-[10px] uppercase tracking-[0.25em] transition active:scale-[0.99] ${
             isWishlisted
               ? 'border-[#7a4a2b] bg-[#7a4a2b] text-[#f6f1e7]'
@@ -75,6 +111,40 @@ export default function ProductCard({ _id, name, description, price, category, i
         >
           {isWishlisted ? '♥ Added to Wishlist' : '♡ Add to Wishlist'}
         </button>
+
+        {/* Cart: Add button OR quantity counter */}
+        {cartQty === 0 ? (
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={stock !== undefined && stock === 0}
+            className="mt-2 w-full border border-[#2b2118] bg-[#2b2118] py-2.5 text-[10px] uppercase tracking-[0.25em] text-[#f6f1e7] transition hover:bg-[#7a4a2b] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+        ) : (
+          <div className="mt-2 flex items-stretch border border-[#2b2118] bg-[#2b2118]">
+            <button
+              type="button"
+              onClick={() => handleQuantity(-1)}
+              disabled={cartQty <= 1}
+              className="px-4 py-2.5 text-xs text-[#f6f1e7] transition hover:bg-[#7a4a2b] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              −
+            </button>
+            <span className="flex flex-1 items-center justify-center border-x border-[#4a3b2c] py-2.5 text-[10px] uppercase tracking-[0.2em] text-[#f6f1e7]">
+              {cartQty} in cart
+            </span>
+            <button
+              type="button"
+              onClick={() => handleQuantity(1)}
+              disabled={stock !== undefined && cartQty >= stock}
+              className="px-4 py-2.5 text-xs text-[#f6f1e7] transition hover:bg-[#7a4a2b] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              +
+            </button>
+          </div>
+        )}
 
         <button
           type="button"
